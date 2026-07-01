@@ -26,7 +26,7 @@ RUN npm ci
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
-    && npm run build \
+    && npx vite build \
     && mkdir -p database storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
     && touch database/database.sqlite \
     && chmod -R 775 storage bootstrap/cache database
@@ -35,6 +35,7 @@ COPY docker/start.sh /usr/local/bin/render-entrypoint.sh
 RUN chmod +x /usr/local/bin/render-entrypoint.sh \
     && sed -i 's/\r$//' /usr/local/bin/render-entrypoint.sh
 
+ENV APP_DIR=/var/www/html
 ENV PORT=8080
 EXPOSE 8080
 

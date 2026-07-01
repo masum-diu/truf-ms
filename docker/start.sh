@@ -1,8 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+resolve_app_dir() {
+    local candidate
+
+    for candidate in \
+        "${APP_DIR:-}" \
+        "/var/www/html" \
+        "/opt/render/project/src" \
+        "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    do
+        if [ -n "$candidate" ] && [ -f "$candidate/artisan" ]; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+
+    echo "$(pwd)"
+}
+
+APP_DIR="$(resolve_app_dir)"
 cd "$APP_DIR"
 
 source_nix() {
@@ -63,6 +80,7 @@ if ! PHP_BIN="$(find_php)"; then
 fi
 
 echo "Using PHP: $PHP_BIN"
+echo "App directory: $APP_DIR"
 
 ensure_sqlite_database() {
     if [ "${DB_CONNECTION:-sqlite}" != "sqlite" ]; then
