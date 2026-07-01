@@ -82,18 +82,34 @@ fi
 echo "Using PHP: $PHP_BIN"
 echo "App directory: $APP_DIR"
 
-ensure_sqlite_database() {
+validate_app_key() {
+    if [ -n "${APP_KEY:-}" ]; then
+        return 0
+    fi
+
+    echo "ERROR: APP_KEY is missing."
+    echo "Render -> Environment -> add APP_KEY"
+    echo "Generate locally: php artisan key:generate --show"
+    exit 1
+}
+
+prepare_sqlite() {
     if [ "${DB_CONNECTION:-sqlite}" != "sqlite" ]; then
         return 0
     fi
 
+    unset DB_URL
+    export DB_DATABASE="${DB_DATABASE:-$APP_DIR/database/database.sqlite}"
+
     mkdir -p database
-    touch database/database.sqlite
-    chmod 664 database/database.sqlite
-    echo "SQLite database ready."
+    touch "$DB_DATABASE"
+    chmod 775 database
+    chmod 664 "$DB_DATABASE"
+    echo "SQLite database ready at $DB_DATABASE"
 }
 
-ensure_sqlite_database
+validate_app_key
+prepare_sqlite
 
 wait_for_database() {
     if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then

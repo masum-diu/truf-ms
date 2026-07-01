@@ -80,7 +80,7 @@
             @if(session('success'))
                 <div class="mx-6 mt-4"><div class="alert-success">{{ session('success') }}</div></div>
             @endif
-            @if($errors->any())
+            @if ($errors->any())
                 <div class="mx-6 mt-4">
                     <div class="alert-error">
                         <ul class="list-disc list-inside">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>

@@ -44,7 +44,7 @@
         </div>
     @endif
 
-    @if($errors->any())
+    @if ($errors->any())
         <div class="max-w-7xl mx-auto px-4 mt-4 w-full">
             <div class="alert-error">
                 <ul class="list-disc list-inside">
