@@ -69,29 +69,11 @@ find_php() {
 
 if ! PHP_BIN="$(find_php)"; then
     echo "ERROR: PHP not found."
-    echo ""
-    echo "Render is using Node runtime. Laravel needs Docker on Render."
-    echo "Fix: Settings -> Environment -> Docker"
-    echo "     Dockerfile Path -> ./Dockerfile"
-    echo "     Start Command -> leave EMPTY"
-    echo "     Build Command -> leave EMPTY"
-    echo ""
     exit 1
 fi
 
 echo "Using PHP: $PHP_BIN"
 echo "App directory: $APP_DIR"
-
-validate_app_key() {
-    if [ -n "${APP_KEY:-}" ]; then
-        return 0
-    fi
-
-    echo "ERROR: APP_KEY is missing."
-    echo "Render -> Environment -> add APP_KEY"
-    echo "Generate locally: php artisan key:generate --show"
-    exit 1
-}
 
 prepare_sqlite() {
     if [ "${DB_CONNECTION:-sqlite}" != "sqlite" ]; then
@@ -101,52 +83,46 @@ prepare_sqlite() {
     unset DB_URL
     export DB_DATABASE="${DB_DATABASE:-$APP_DIR/database/database.sqlite}"
 
-    mkdir -p database
+    mkdir -p database storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
     touch "$DB_DATABASE"
-    chmod 775 database
+    chmod -R 775 storage bootstrap/cache database
     chmod 664 "$DB_DATABASE"
     echo "SQLite database ready at $DB_DATABASE"
 }
 
-validate_app_key
-prepare_sqlite
-
-wait_for_database() {
-    if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
-        return 0
-    fi
-
-    if [ -z "${DB_URL:-}" ] && [ -z "${DB_HOST:-}" ]; then
-        return 0
-    fi
-
-    echo "Waiting for database..."
-
-    for _ in $(seq 1 45); do
-        if "$PHP_BIN" artisan db:show >/dev/null 2>&1; then
-            echo "Database is ready."
-            return 0
-        fi
-
-        sleep 2
-    done
-
-    echo "Database connection timed out."
-    exit 1
+app_key_works() {
+    "$PHP_BIN" -r "
+        require 'vendor/autoload.php';
+        \$app = require 'bootstrap/app.php';
+        \$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+        Illuminate\Support\Facades\Crypt::encryptString('render-health-check');
+    " >/dev/null 2>&1
 }
 
-wait_for_database
+ensure_app_key() {
+    if app_key_works; then
+        echo "APP_KEY is valid."
+        return 0
+    fi
 
+    export APP_KEY="$("$PHP_BIN" artisan key:generate --show)"
+    echo "Generated APP_KEY for this deploy."
+    echo "Add this to Render Environment to keep it stable:"
+    echo "$APP_KEY"
+}
+
+prepare_sqlite
 "$PHP_BIN" artisan config:clear
+ensure_app_key
+
 "$PHP_BIN" artisan migrate --force
 
 if [ "${SEED_DATABASE:-false}" = "true" ]; then
-    "$PHP_BIN" artisan db:seed --force
+    "$PHP_BIN" artisan db:seed --force || echo "Seed skipped (database may already contain data)."
 fi
 
 "$PHP_BIN" artisan config:cache
 "$PHP_BIN" artisan route:cache
-"$PHP_BIN" artisan view:cache
 
 echo "Starting server on port ${PORT:-8080}..."
 exec "$PHP_BIN" artisan serve --host=0.0.0.0 --port="${PORT:-8080}"
