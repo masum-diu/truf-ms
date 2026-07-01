@@ -1,9 +1,3 @@
-databases:
-  - name: truf-ms-db
-    plan: free
-    databaseName: truf_ms
-    user: truf_ms
-
 services:
   - type: web
     name: truf-ms
@@ -29,11 +23,9 @@ services:
       - key: LOG_LEVEL
         value: error
       - key: DB_CONNECTION
-        value: pgsql
-      - key: DB_URL
-        fromDatabase:
-          name: truf-ms-db
-          property: connectionString
+        value: sqlite
+      - key: DB_DATABASE
+        value: /var/www/html/database/database.sqlite
       - key: SESSION_DRIVER
         value: database
       - key: SESSION_SECURE_COOKIE

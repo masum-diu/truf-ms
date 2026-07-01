@@ -8,7 +8,8 @@ nixPkgs = [
   "php83",
   "php83Packages.composer",
   "php83Extensions.pdo",
-  "php83Extensions.pdo_pgsql",
+  "php83Extensions.pdo_sqlite",
+  "php83Extensions.sqlite",
   "php83Extensions.zip",
   "php83Extensions.mbstring",
   "php83Extensions.openssl",
@@ -16,12 +17,12 @@ nixPkgs = [
   "php83Extensions.xml",
   "php83Extensions.curl",
   "nodejs_20",
-  "postgresql",
 ]
 
 [phases.install]
 cmds = [
-  "mkdir -p storage",
+  "mkdir -p storage database",
+  "touch database/database.sqlite",
   "command -v php > storage/.php-bin",
   "composer install --no-dev --optimize-autoloader --no-interaction",
   "npm ci",

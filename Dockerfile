@@ -4,10 +4,9 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     curl \
-    libpq-dev \
+    libsqlite3-dev \
     libzip-dev \
-    postgresql-client \
-    && docker-php-ext-install pdo pdo_pgsql zip \
+    && docker-php-ext-install pdo pdo_sqlite zip \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -28,8 +27,9 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
     && npm run build \
-    && mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+    && mkdir -p database storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
+    && touch database/database.sqlite \
+    && chmod -R 775 storage bootstrap/cache database
 
 COPY docker/start.sh /usr/local/bin/render-entrypoint.sh
 RUN chmod +x /usr/local/bin/render-entrypoint.sh \

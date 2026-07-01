@@ -64,25 +64,32 @@ fi
 
 echo "Using PHP: $PHP_BIN"
 
+ensure_sqlite_database() {
+    if [ "${DB_CONNECTION:-sqlite}" != "sqlite" ]; then
+        return 0
+    fi
+
+    mkdir -p database
+    touch database/database.sqlite
+    chmod 664 database/database.sqlite
+    echo "SQLite database ready."
+}
+
+ensure_sqlite_database
+
 wait_for_database() {
-    if [ "${DB_CONNECTION:-}" != "pgsql" ] && [ -z "${DB_URL:-}" ]; then
+    if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
+        return 0
+    fi
+
+    if [ -z "${DB_URL:-}" ] && [ -z "${DB_HOST:-}" ]; then
         return 0
     fi
 
     echo "Waiting for database..."
 
     for _ in $(seq 1 45); do
-        if [ -n "${DB_URL:-}" ] && command -v psql >/dev/null 2>&1; then
-            if psql "$DB_URL" -c "SELECT 1" >/dev/null 2>&1; then
-                echo "Database is ready."
-                return 0
-            fi
-        elif [ -n "${DB_HOST:-}" ] && command -v pg_isready >/dev/null 2>&1; then
-            if pg_isready -h "$DB_HOST" -p "${DB_PORT:-5432}" -U "${DB_USERNAME:-postgres}" >/dev/null 2>&1; then
-                echo "Database is ready."
-                return 0
-            fi
-        elif "$PHP_BIN" artisan db:show >/dev/null 2>&1; then
+        if "$PHP_BIN" artisan db:show >/dev/null 2>&1; then
             echo "Database is ready."
             return 0
         fi
