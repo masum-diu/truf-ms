@@ -2,8 +2,260 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Syne', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+
+    --color-pitch-950: #050d1a;
+    --color-pitch-900: #0a1628;
+    --color-pitch-800: #0f2240;
+    --color-pitch-700: #15325c;
+    --color-turf-900: #0d3d24;
+    --color-turf-800: #14532d;
+    --color-turf-700: #166534;
+    --color-turf-600: #16a34a;
+    --color-lime-400: #a3e635;
+    --color-lime-300: #bef264;
+    --color-lime-500: #84cc16;
+    --color-surface: #f4f7f0;
+    --color-surface-card: #ffffff;
+    --color-amber-glow: #fbbf24;
+}
+
+@layer base {
+    body {
+        @apply antialiased;
+    }
+}
+
+@layer components {
+    .font-display {
+        font-family: var(--font-display);
+    }
+
+    /* ── Turf field pattern ── */
+    .pitch-pattern {
+        background-color: var(--color-pitch-900);
+        background-image:
+            linear-gradient(rgba(163, 230, 53, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(163, 230, 53, 0.04) 1px, transparent 1px),
+            radial-gradient(ellipse 80% 60% at 50% 0%, rgba(22, 101, 52, 0.35) 0%, transparent 70%);
+        background-size: 48px 48px, 48px 48px, 100% 100%;
+    }
+
+    .pitch-pattern-light {
+        background-color: var(--color-surface);
+        background-image:
+            linear-gradient(rgba(22, 101, 52, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(22, 101, 52, 0.05) 1px, transparent 1px);
+        background-size: 40px 40px;
+    }
+
+    /* ── Public site nav ── */
+    .site-nav {
+        @apply sticky top-0 z-50 border-b border-white/10 backdrop-blur-xl;
+        background: rgba(10, 22, 40, 0.85);
+    }
+
+    .nav-brand {
+        @apply font-display font-bold text-xl tracking-tight text-white flex items-center gap-2.5;
+    }
+
+    .nav-brand-icon {
+        @apply w-9 h-9 rounded-xl flex items-center justify-center text-lg;
+        background: linear-gradient(135deg, var(--color-lime-400), var(--color-turf-600));
+        box-shadow: 0 0 20px rgba(163, 230, 53, 0.3);
+    }
+
+    .nav-link {
+        @apply text-sm text-white/70 hover:text-lime-300 transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5;
+    }
+
+    .nav-link-active {
+        @apply text-lime-300 bg-white/10;
+    }
+
+    .btn-lime {
+        @apply inline-flex items-center justify-center font-semibold text-sm px-5 py-2.5 rounded-xl transition-all;
+        background: linear-gradient(135deg, var(--color-lime-400), var(--color-lime-500));
+        color: var(--color-pitch-900);
+        box-shadow: 0 4px 20px rgba(163, 230, 53, 0.35);
+    }
+
+    .btn-lime:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 28px rgba(163, 230, 53, 0.5);
+    }
+
+    .btn-outline-light {
+        @apply inline-flex items-center justify-center font-medium text-sm px-5 py-2.5 rounded-xl border border-white/20 text-white hover:bg-white/10 transition-all;
+    }
+
+    /* ── Cards ── */
+    .glass-card {
+        @apply rounded-2xl border border-white/60 overflow-hidden;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 4px 24px rgba(10, 22, 40, 0.08), 0 1px 3px rgba(10, 22, 40, 0.06);
+    }
+
+    .glass-card:hover {
+        box-shadow: 0 12px 40px rgba(10, 22, 40, 0.14), 0 2px 6px rgba(10, 22, 40, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .turf-card-img {
+        @apply relative h-44 overflow-hidden;
+        background: linear-gradient(160deg, var(--color-turf-800) 0%, var(--color-pitch-900) 100%);
+    }
+
+    .turf-card-img::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(rgba(163, 230, 53, 0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(163, 230, 53, 0.08) 1px, transparent 1px);
+        background-size: 24px 24px;
+    }
+
+    .area-chip {
+        @apply block p-4 rounded-2xl text-center transition-all duration-200 border-2 font-medium;
+    }
+
+    .area-chip-default {
+        @apply border-turf-700/10 bg-white text-pitch-900 hover:border-lime-400/60 hover:shadow-lg hover:shadow-lime-400/10;
+    }
+
+    .area-chip-active {
+        @apply border-lime-400 bg-turf-800 text-white shadow-lg shadow-lime-400/20;
+    }
+
+    .section-title {
+        @apply font-display text-2xl md:text-3xl font-bold text-pitch-900 tracking-tight;
+    }
+
+    .badge-lime {
+        @apply text-xs font-semibold px-2.5 py-1 rounded-full;
+        background: rgba(163, 230, 53, 0.15);
+        color: var(--color-turf-800);
+    }
+
+    .badge-area {
+        @apply text-xs font-medium px-2.5 py-1 rounded-full bg-pitch-900/8 text-pitch-700;
+    }
+
+    /* ── Forms ── */
+    .form-input {
+        @apply w-full border border-pitch-900/10 rounded-xl px-4 py-2.5 text-pitch-900 bg-white
+               focus:outline-none focus:ring-2 focus:ring-lime-400/50 focus:border-lime-400 transition;
+    }
+
+    .form-label {
+        @apply block text-sm font-medium text-pitch-800 mb-1.5;
+    }
+
+    .auth-card {
+        @apply rounded-3xl border border-white/80 p-8 w-full max-w-md;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 24px 64px rgba(10, 22, 40, 0.18);
+    }
+
+    /* ── Alerts ── */
+    .alert-success {
+        @apply rounded-xl px-4 py-3 text-sm border;
+        background: rgba(163, 230, 53, 0.12);
+        border-color: rgba(163, 230, 53, 0.3);
+        color: var(--color-turf-800);
+    }
+
+    .alert-error {
+        @apply rounded-xl px-4 py-3 text-sm border border-red-200 bg-red-50 text-red-700;
+    }
+
+    /* ── Panel layouts (admin / vendor) ── */
+    .panel-sidebar {
+        @apply w-64 flex flex-col shrink-0 text-white;
+        background: linear-gradient(180deg, var(--color-pitch-900) 0%, var(--color-pitch-950) 100%);
+    }
+
+    .panel-sidebar-vendor {
+        background: linear-gradient(180deg, var(--color-turf-900) 0%, var(--color-pitch-900) 100%);
+    }
+
+    .panel-nav-link {
+        @apply flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm transition-all text-white/60 hover:text-white hover:bg-white/8;
+    }
+
+    .panel-nav-link-active {
+        @apply text-white font-medium bg-white/12;
+        box-shadow: inset 3px 0 0 var(--color-lime-400);
+    }
+
+    .panel-nav-link-admin-active {
+        @apply text-white font-medium bg-white/12;
+        box-shadow: inset 3px 0 0 var(--color-amber-glow);
+    }
+
+    .panel-stat-card {
+        @apply rounded-2xl border border-pitch-900/8 p-5 bg-white;
+        box-shadow: 0 2px 12px rgba(10, 22, 40, 0.06);
+    }
+
+    .panel-table-wrap {
+        @apply rounded-2xl border border-pitch-900/8 overflow-hidden bg-white;
+        box-shadow: 0 2px 12px rgba(10, 22, 40, 0.06);
+    }
+
+    .btn-panel-primary {
+        @apply inline-flex items-center justify-center font-semibold text-sm px-4 py-2 rounded-xl transition-all text-pitch-900;
+        background: linear-gradient(135deg, var(--color-lime-400), var(--color-lime-500));
+    }
+
+    .btn-panel-primary:hover {
+        box-shadow: 0 4px 16px rgba(163, 230, 53, 0.4);
+    }
+
+    .btn-panel-admin {
+        @apply inline-flex items-center justify-center font-semibold text-sm px-4 py-2 rounded-xl transition-all text-white;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .btn-panel-admin:hover {
+        box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+    }
+
+    .slot-btn {
+        @apply text-xs px-2 py-2 rounded-xl border transition font-medium;
+    }
+
+    .slot-available {
+        @apply border-pitch-900/10 bg-white hover:border-lime-400 hover:bg-lime-400/10 cursor-pointer text-pitch-800;
+    }
+
+    .slot-unavailable {
+        @apply border-pitch-900/5 bg-pitch-900/3 text-pitch-900/30 cursor-not-allowed;
+    }
+
+    .slot-selected {
+        @apply border-lime-400 bg-lime-400/15 text-turf-800 font-semibold;
+    }
+
+    .slot-tab {
+        @apply flex-1 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all border-2 border-transparent;
+    }
+
+    .slot-tab-inactive {
+        @apply text-pitch-900/50 hover:bg-pitch-900/5 hover:text-pitch-900;
+    }
+
+    .slot-tab-day-active {
+        @apply bg-amber-400/15 border-amber-400/50 text-amber-800;
+    }
+
+    .slot-tab-night-active {
+        @apply bg-indigo-500/15 border-indigo-400/50 text-indigo-800;
+    }
 }
