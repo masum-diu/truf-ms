@@ -21,9 +21,11 @@ nixPkgs = [
 
 [phases.install]
 cmds = [
+  "mkdir -p storage",
+  "command -v php > storage/.php-bin",
   "composer install --no-dev --optimize-autoloader --no-interaction",
   "npm ci",
-  "npm run build",
+  "npx vite build",
 ]
 
 [start]
