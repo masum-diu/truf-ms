@@ -13,7 +13,6 @@ services:
     branch: main
     healthCheckPath: /up
     dockerfilePath: ./Dockerfile
-    dockerCommand: /bin/bash docker/start.sh
     envVars:
       - key: APP_NAME
         value: TurfBook

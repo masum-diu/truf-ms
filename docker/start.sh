@@ -1,34 +1,40 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
+
+PHP_BIN="/usr/local/bin/php"
+
+if [ ! -x "$PHP_BIN" ]; then
+    PHP_BIN="$(command -v php || true)"
+fi
+
+if [ -z "$PHP_BIN" ]; then
+    echo "ERROR: PHP not found. Render Runtime must be set to Docker (not Node/Shell)."
+    exit 1
+fi
 
 wait_for_database() {
+    if [ "${DB_CONNECTION:-}" != "pgsql" ] && [ -z "${DB_URL:-}" ]; then
+        return 0
+    fi
+
     echo "Waiting for database..."
 
-    for _ in $(seq 1 30); do
-        if php -r "
-            try {
-                if (\$url = getenv('DB_URL')) {
-                    new PDO(\$url);
-                    exit(0);
-                }
-                \$host = getenv('DB_HOST');
-                if (! \$host) {
-                    exit(0);
-                }
-                \$dsn = sprintf(
-                    'pgsql:host=%s;port=%s;dbname=%s',
-                    \$host,
-                    getenv('DB_PORT') ?: '5432',
-                    getenv('DB_DATABASE') ?: 'postgres'
-                );
-                new PDO(\$dsn, getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
-                exit(0);
-            } catch (Throwable \$e) {
-                exit(1);
-            }
-        "; then
-            echo "Database is ready."
-            return 0
+    for _ in $(seq 1 45); do
+        if [ -n "${DB_URL:-}" ] && command -v psql >/dev/null 2>&1; then
+            if psql "$DB_URL" -c "SELECT 1" >/dev/null 2>&1; then
+                echo "Database is ready."
+                return 0
+            fi
+        elif [ -n "${DB_HOST:-}" ] && command -v pg_isready >/dev/null 2>&1; then
+            if pg_isready -h "$DB_HOST" -p "${DB_PORT:-5432}" -U "${DB_USERNAME:-postgres}" >/dev/null 2>&1; then
+                echo "Database is ready."
+                return 0
+            fi
+        else
+            if "$PHP_BIN" artisan db:show >/dev/null 2>&1; then
+                echo "Database is ready."
+                return 0
+            fi
         fi
 
         sleep 2
@@ -38,18 +44,20 @@ wait_for_database() {
     exit 1
 }
 
+cd /var/www/html
+
 wait_for_database
 
-php artisan config:clear
-
-php artisan migrate --force
+"$PHP_BIN" artisan config:clear
+"$PHP_BIN" artisan migrate --force
 
 if [ "${SEED_DATABASE:-false}" = "true" ]; then
-    php artisan db:seed --force
+    "$PHP_BIN" artisan db:seed --force
 fi
 
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+"$PHP_BIN" artisan config:cache
+"$PHP_BIN" artisan route:cache
+"$PHP_BIN" artisan view:cache
 
-exec php artisan serve --host=0.0.0.0 --port="${PORT:-8080}"
+echo "Starting server on port ${PORT:-8080}..."
+exec "$PHP_BIN" artisan serve --host=0.0.0.0 --port="${PORT:-8080}"
