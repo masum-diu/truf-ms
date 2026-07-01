@@ -1,0 +1,46 @@
+databases:
+  - name: truf-ms-db
+    plan: free
+    databaseName: truf_ms
+    user: truf_ms
+
+services:
+  - type: web
+    name: truf-ms
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    healthCheckPath: /up
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_NAME
+        value: TurfBook
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        sync: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: truf-ms-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: SEED_DATABASE
+        value: "true"
