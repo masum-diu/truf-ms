@@ -1,14 +1,34 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PHP_BIN="/usr/local/bin/php"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$APP_DIR"
 
-if [ ! -x "$PHP_BIN" ]; then
-    PHP_BIN="$(command -v php || true)"
-fi
+find_php() {
+    if [ -x /usr/local/bin/php ]; then
+        echo /usr/local/bin/php
+        return 0
+    fi
 
-if [ -z "$PHP_BIN" ]; then
-    echo "ERROR: PHP not found. Render Runtime must be set to Docker (not Node/Shell)."
+    if command -v php >/dev/null 2>&1; then
+        command -v php
+        return 0
+    fi
+
+    for candidate in /nix/store/*php*/bin/php /nix/store/php*/bin/php; do
+        if [ -x "$candidate" ]; then
+            echo "$candidate"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+if ! PHP_BIN="$(find_php)"; then
+    echo "ERROR: PHP not found."
+    echo "Render Settings -> Environment must be Docker (recommended) or Native with nixpacks.toml."
     exit 1
 fi
 
@@ -30,11 +50,9 @@ wait_for_database() {
                 echo "Database is ready."
                 return 0
             fi
-        else
-            if "$PHP_BIN" artisan db:show >/dev/null 2>&1; then
-                echo "Database is ready."
-                return 0
-            fi
+        elif "$PHP_BIN" artisan db:show >/dev/null 2>&1; then
+            echo "Database is ready."
+            return 0
         fi
 
         sleep 2
@@ -43,8 +61,6 @@ wait_for_database() {
     echo "Database connection timed out."
     exit 1
 }
-
-cd /var/www/html
 
 wait_for_database
 

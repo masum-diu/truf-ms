@@ -1,0 +1,30 @@
+providers = ["php", "node"]
+
+[variables]
+NIXPACKS_PHP_ROOT_DIR = "/app/public"
+
+[phases.setup]
+nixPkgs = [
+  "php83",
+  "php83Packages.composer",
+  "php83Extensions.pdo",
+  "php83Extensions.pdo_pgsql",
+  "php83Extensions.zip",
+  "php83Extensions.mbstring",
+  "php83Extensions.openssl",
+  "php83Extensions.tokenizer",
+  "php83Extensions.xml",
+  "php83Extensions.curl",
+  "nodejs_20",
+  "postgresql",
+]
+
+[phases.install]
+cmds = [
+  "composer install --no-dev --optimize-autoloader --no-interaction",
+  "npm ci",
+  "npm run build",
+]
+
+[start]
+cmd = "bash docker/start.sh"
